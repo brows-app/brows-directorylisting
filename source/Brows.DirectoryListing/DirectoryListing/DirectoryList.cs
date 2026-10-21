@@ -30,7 +30,7 @@ namespace Brows.DirectoryListing;
 /// </remarks>
 public static class DirectoryList {
     /// <summary>
-    /// Parses chunks of FTP directory listing text into directory entries.
+    /// Parses chunks of FTP directory listing text using general formats and no timestamp adjustments.
     /// </summary>
     /// <param name="contents">
     /// An asynchronous sequence of text chunks containing the listing.
@@ -51,18 +51,19 @@ public static class DirectoryList {
     /// Enumeration is canceled through <paramref name="cancellationToken"/> or the input sequence.
     /// </exception>
     public static IAsyncEnumerable<DirectoryListItem> Parse(IAsyncEnumerable<string> contents,
-                                                               CancellationToken cancellationToken) {
-        return Parse(contents, DirectoryListServerType.Default, cancellationToken);
+                                                            CancellationToken cancellationToken) {
+        return Parse(contents, null, cancellationToken);
     }
 
     /// <summary>
-    /// Parses chunks of FTP directory listing text using the selected server-specific formats.
+    /// Parses listing text using the server type and timestamp adjustments in the supplied options.
     /// </summary>
     /// <param name="contents">
     /// An asynchronous sequence of text chunks containing the listing.
     /// </param>
-    /// <param name="serverType">
-    /// The server type used to select server-specific listing parsers.
+    /// <param name="options">
+    /// The parsing options, or <see langword="null"/> to use general listing formats and no
+    /// timestamp adjustments, matching a default <see cref="DirectoryListOptions"/> instance.
     /// </param>
     /// <param name="cancellationToken">
     /// A token used to cancel enumeration of the listing.
@@ -74,7 +75,8 @@ public static class DirectoryList {
     /// <paramref name="contents"/> is <see langword="null"/>.
     /// </exception>
     /// <exception cref="ArgumentOutOfRangeException">
-    /// <paramref name="serverType"/> is not a defined value.
+    /// The <see cref="DirectoryListOptions.ServerType"/> value in <paramref name="options"/>
+    /// is not supported.
     /// </exception>
     /// <exception cref="InvalidDataException">
     /// A physical listing line exceeds 10,000 UTF-8 bytes.
@@ -83,95 +85,12 @@ public static class DirectoryList {
     /// Enumeration is canceled through <paramref name="cancellationToken"/> or the input sequence.
     /// </exception>
     public static IAsyncEnumerable<DirectoryListItem> Parse(IAsyncEnumerable<string> contents,
-                                                               DirectoryListServerType serverType,
-                                                               CancellationToken cancellationToken) {
-        return Parse(contents, serverType, TimeSpan.Zero, TimeSpan.Zero, cancellationToken);
-    }
-
-    /// <summary>
-    /// Parses listing text and adjusts timestamps with the supplied offsets.
-    /// </summary>
-    /// <param name="contents">
-    /// An asynchronous sequence of text chunks containing the listing.
-    /// </param>
-    /// <param name="serverType">
-    /// The server type used to select server-specific listing parsers.
-    /// </param>
-    /// <param name="listingTimeOffset">
-    /// An offset added by parsers to formats whose timestamps are treated as server-local. For a
-    /// server-local time that is UTC+02:00, pass a negative two-hour offset to convert it to UTC.
-    /// UTC-valued formats are not changed by this setting.
-    /// </param>
-    /// <param name="cancellationToken">
-    /// A token used to cancel enumeration of the listing.
-    /// </param>
-    /// <returns>
-    /// An asynchronous sequence of parsed directory entries.
-    /// </returns>
-    /// <exception cref="ArgumentNullException">
-    /// <paramref name="contents"/> is <see langword="null"/>.
-    /// </exception>
-    /// <exception cref="ArgumentOutOfRangeException">
-    /// <paramref name="serverType"/> is not a defined value.
-    /// </exception>
-    /// <exception cref="InvalidDataException">
-    /// A physical listing line exceeds 10,000 UTF-8 bytes.
-    /// </exception>
-    /// <exception cref="OperationCanceledException">
-    /// Enumeration is canceled through <paramref name="cancellationToken"/> or the input sequence.
-    /// </exception>
-    public static IAsyncEnumerable<DirectoryListItem> Parse(IAsyncEnumerable<string> contents,
-                                                               DirectoryListServerType serverType,
-                                                               TimeSpan listingTimeOffset,
-                                                               CancellationToken cancellationToken) {
-        return Parse(contents, serverType, listingTimeOffset, TimeSpan.Zero, cancellationToken);
-    }
-
-    /// <summary>
-    /// Parses listing text and applies listing-time and server-clock adjustments to timestamps.
-    /// </summary>
-    /// <param name="contents">
-    /// An asynchronous sequence of text chunks containing the listing.
-    /// </param>
-    /// <param name="serverType">
-    /// The server type used to select server-specific listing parsers.
-    /// </param>
-    /// <param name="listingTimeOffset">
-    /// An offset added by parsers to formats whose timestamps are treated as server-local. For a
-    /// server-local time that is UTC+02:00, pass a negative two-hour offset to convert it to UTC.
-    /// UTC-valued formats are not changed by this setting.
-    /// </param>
-    /// <param name="serverTimeOffset">
-    /// An additional offset added to every reported timestamp, including UTC-valued timestamps, to
-    /// correct the server clock.
-    /// </param>
-    /// <param name="cancellationToken">
-    /// A token used to cancel enumeration of the listing.
-    /// </param>
-    /// <returns>
-    /// An asynchronous sequence of parsed directory entries.
-    /// </returns>
-    /// <exception cref="ArgumentNullException">
-    /// <paramref name="contents"/> is <see langword="null"/>.
-    /// </exception>
-    /// <exception cref="ArgumentOutOfRangeException">
-    /// <paramref name="serverType"/> is not a defined value.
-    /// </exception>
-    /// <exception cref="InvalidDataException">
-    /// A physical listing line exceeds 10,000 UTF-8 bytes.
-    /// </exception>
-    /// <exception cref="OperationCanceledException">
-    /// Enumeration is canceled through <paramref name="cancellationToken"/> or the input sequence.
-    /// </exception>
-    public static IAsyncEnumerable<DirectoryListItem> Parse(IAsyncEnumerable<string> contents,
-                                                               DirectoryListServerType serverType,
-                                                               TimeSpan listingTimeOffset,
-                                                               TimeSpan serverTimeOffset,
-                                                               CancellationToken cancellationToken) {
+                                                            DirectoryListOptions options,
+                                                            CancellationToken cancellationToken) {
         var parser = new FtpListingParser(
-            serverType,
-            listingTimeOffset: listingTimeOffset,
-            serverTimeOffset: serverTimeOffset);
+            options?.ServerType ?? DirectoryListServerType.Default,
+            listingTimeOffset: options?.ListItemTimeOffset ?? TimeSpan.Zero,
+            serverTimeOffset: options?.ServerTimeOffset ?? TimeSpan.Zero);
         var result = parser.ParseContents(contents, cancellationToken);
         return result;
     }

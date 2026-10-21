@@ -84,9 +84,10 @@ public sealed class DirectoryListItem {
     /// </summary>
     /// <remarks>
     /// Parser-created timestamps have <see cref="DateTimeKind.Utc"/>. For formats that report
-    /// server-local time, use the <c>listingTimeOffset</c> parameter of
-    /// <see cref="DirectoryList.Parse(System.Collections.Generic.IAsyncEnumerable{string},DirectoryListServerType,System.TimeSpan,CancellationToken)"/>
-    /// or an overload that also accepts <c>serverTimeOffset</c> to adjust the value.
+    /// server-local time, configure <see cref="DirectoryListOptions.ListItemTimeOffset"/>
+    /// when calling <see cref="DirectoryList.Parse(System.Collections.Generic.IAsyncEnumerable{string},DirectoryListOptions,CancellationToken)"/>.
+    /// Use <see cref="DirectoryListOptions.ServerTimeOffset"/> to apply an additional
+    /// server-clock correction to all timestamps.
     /// </remarks>
     public DateTime? Time { get; }
 
@@ -134,7 +135,14 @@ public sealed class DirectoryListItem {
     /// <exception cref="ArgumentNullException">
     /// <paramref name="name"/> is <see langword="null"/>.
     /// </exception>
-    public DirectoryListItem(string name, long? size, string permissions, string ownerGroup, string target, DateTime? time, DirectoryListItemFlags flags, string parser = null) {
+    public DirectoryListItem(string name,
+                             long? size,
+                             string permissions,
+                             string ownerGroup,
+                             string target,
+                             DateTime? time,
+                             DirectoryListItemFlags flags,
+                             string parser = null) {
         Name = name ?? throw new ArgumentNullException(nameof(name));
         Size = size;
         Permissions = permissions;

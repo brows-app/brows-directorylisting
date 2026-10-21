@@ -7,7 +7,7 @@
     <VersionPrefix>0.1.0</VersionPrefix>
     <VersionSuffix></VersionSuffix>
     <RepositoryType>git</RepositoryType>
-    <RepositoryUrl Condition="'$(RepositoryUrl)' == '' And '$(GITHUB_SERVER_URL)' != '' And '$(GITHUB_REPOSITORY)' != ''">$(GITHUB_SERVER_URL)/$(GITHUB_REPOSITORY).git</RepositoryUrl>
+    <RepositoryUrl>https://github.com/brows-app/brows-directorylisting.git</RepositoryUrl>
     <RepositoryBranch></RepositoryBranch>
     <RepositoryCommit></RepositoryCommit>
     <RootNamespace>Brows</RootNamespace>

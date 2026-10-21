@@ -86,9 +86,11 @@ public sealed class DirectoryListTest {
         }
         return await ToListAsync(DirectoryList.Parse(
             parsedContents,
-            serverType,
-            listingTimeOffset,
-            serverTimeOffset,
+            new DirectoryListOptions {
+                ServerType = serverType,
+                ListItemTimeOffset = listingTimeOffset,
+                ServerTimeOffset = serverTimeOffset
+            },
             default));
     }
 
@@ -1422,6 +1424,23 @@ public sealed class DirectoryListTest {
             serverTimeOffset: TimeSpan.FromHours(1))).Single();
 
         Assert.That(item.Time, Is.EqualTo(new DateTime(2008, 11, 5, 17, 52, 15, DateTimeKind.Utc)));
+    }
+
+    [TestCase(true)]
+    [TestCase(false)]
+    public async Task NullAndDefaultOptionsUseGeneralFormatsWithoutTimestampAdjustments(bool useNullOptions) {
+        async IAsyncEnumerable<string> contents() {
+            yield return "Migrated\tSOME.FILE\n";
+            yield return "-rw-r--r-- 1 user group 5 Jan 1 2024 unix\n";
+            yield return "type=file;modify=20240101000000; mlsd\n";
+            await Task.CompletedTask;
+        }
+
+        var options = useNullOptions ? null : new DirectoryListOptions();
+        var items = await ToListAsync(DirectoryList.Parse(contents(), options, default));
+        Assert.That(items.Select(item => item.Name), Is.EqualTo(new[] { "unix", "mlsd" }));
+        Assert.That(items.Select(item => item.Time),
+            Is.All.EqualTo(new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc)));
     }
 
     [Test]

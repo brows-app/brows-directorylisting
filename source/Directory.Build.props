@@ -2,7 +2,7 @@
 <Project>
   <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)..\'))" />
   <PropertyGroup>
-    <GenerateDocumentationFile>True</GenerateDocumentationFile>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <IsPackable>true</IsPackable>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
@@ -11,7 +11,7 @@
     <PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
     <Copyright>Copyright © Ken Yourek 2026; Copyright (C) 2004-2024 Tim Kosse</Copyright>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <PackageProjectUrl>$(RepositoryUrl)</PackageProjectUrl>
+    <PackageProjectUrl>https://github.com/brows-app/brows-directorylisting</PackageProjectUrl>
     <PackageTags>ftp;ftp-listing;ftp-listing-parser;directory-listing;listing-parser;mlsd;unix;dos;iis;eplf;vms;openvms;ibm;as400;iseries;mvs;pds;pds2;netware;netpresenz;os9;nonstop;zvm;wfftp;vshell</PackageTags>
   </PropertyGroup>
   <ItemGroup>

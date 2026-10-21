@@ -58,9 +58,9 @@ at the package root.
 
 ## Public API and documentation
 
-The public API consists of `DirectoryList`, `DirectoryListItem`,
-`DirectoryListItemFlags`, and `DirectoryListServerType`. The parser and
-format-specific implementation types are internal; tests access them through
+The public API consists of `DirectoryList`, `DirectoryListOptions`,
+`DirectoryListItem`, `DirectoryListItemFlags`, and `DirectoryListServerType`.
+The parser and format-specific implementation types are internal; tests access them through
 `InternalsVisibleTo`. Do not widen the public API unless explicitly requested.
 
 Write XML documentation for public types and their public members. Do not add
@@ -90,9 +90,10 @@ README omits the repository installation and build instructions.
   values (MVS sequential entries use 100). The unit of a reported size depends
   on the listing format; some MVS formats use record counts.
 - Listing timestamps are represented as UTC-kind `DateTime` values. The
-  parser does not infer the server's timezone: `listingTimeOffset` is added
-  for formats treated as server-local, while `serverTimeOffset` is added to
-  every timestamp. MLSD timestamps are UTC-valued and are not changed by the
+  parser does not infer the server's timezone:
+  `DirectoryListOptions.ListItemTimeOffset` is added for formats treated as
+  server-local, while `ServerTimeOffset` is added to every timestamp.
+  MLSD timestamps are UTC-valued and are not changed by the
   listing-time offset.
 - `DirectoryListItem.Target` preserves a nonempty constructor value; check
   each link parser's extraction separately. `File` is the zero value of

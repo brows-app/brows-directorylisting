@@ -55,10 +55,17 @@ with `dotnet add package Brows.DirectoryListing`.
 ## Usage
 
 `DirectoryList.Parse` consumes an asynchronous sequence of decoded text chunks
-and yields parsed `DirectoryListItem` entries. Use the overload without a
-server type for general listings. Select a server type when parsing MVS
-migrated/PDS2/tape, HP NonStop, or z/VM listings so those formats are dispatched
-appropriately.
+and yields parsed `DirectoryListItem` entries. Call
+`DirectoryList.Parse(contents, cancellationToken)` for general listings, or
+`DirectoryList.Parse(contents, options, cancellationToken)` to configure parsing
+with a `DirectoryListOptions` instance. Passing `null` for `options` uses the
+same defaults as a new options instance:
+
+| Option | Default | Purpose |
+| --- | --- | --- |
+| `ServerType` | `DirectoryListServerType.Default` | Selects server-specific parsing for MVS migrated/PDS2/tape, HP NonStop, or z/VM listings. |
+| `ListItemTimeOffset` | `TimeSpan.Zero` | Adjusts timestamps in formats treated as server-local. |
+| `ServerTimeOffset` | `TimeSpan.Zero` | Applies an additional server-clock correction to every timestamp. |
 
 Physical lines are separated by CR, LF, or NUL; a CRLF pair is treated as one
 terminator, including when split between input chunks. A leading BOM is
@@ -68,10 +75,10 @@ parser receives decoded strings, this limit is based on their UTF-8 encoding,
 not the original server's wire encoding. Enumeration throws
 `InvalidDataException` if a line exceeds the limit.
 
-For formats that interpret timestamps as server-local, `listingTimeOffset` is
+For formats that interpret timestamps as server-local, `ListItemTimeOffset` is
 added to the parsed time. For example, convert a server's UTC+02:00 local time
-to UTC by passing `TimeSpan.FromHours(-2)`. UTC-valued formats such as MLSD
-are not changed by this offset. `serverTimeOffset` is added to every parsed
+to UTC by setting this option to `TimeSpan.FromHours(-2)`. UTC-valued formats
+such as MLSD are not changed by this offset. `ServerTimeOffset` is added to every parsed
 timestamp, including UTC-valued timestamps. The parser does not infer a
 server's timezone; parsed timestamps are represented as UTC-kind
 `DateTime` values, but local-time listings require the appropriate offset to
@@ -96,16 +103,17 @@ static async IAsyncEnumerable<string> GetListingChunks() {
 
 await foreach (var entry in DirectoryList.Parse(
     GetListingChunks(),
-    DirectoryListServerType.Mvs,
+    new DirectoryListOptions {
+        ServerType = DirectoryListServerType.Mvs
+    },
     CancellationToken.None)) {
     Console.WriteLine($"{entry.Name}\t{entry.Size}\t{entry.Time}");
 }
 ```
 
-Use `DirectoryListServerType.Default` or the overload without a server type
-for general listings. A raw filename list is returned only when the complete
-listing has no recognized structured entries and each candidate line contains
-no ASCII spaces. Entries named `.` and `..` are excluded from every output
+A raw filename list is returned only when the complete listing has no
+recognized structured entries and each candidate line contains no ASCII spaces.
+Entries named `.` and `..` are excluded from every output
 path. Unicode whitespace is preserved as filename text.
 
 Each `DirectoryListItem` exposes these values:
@@ -132,9 +140,9 @@ Missing permissions and owner/group metadata may be `null` or an empty string.
 - `tests/Brows.DirectoryListing.Tests/DirectoryListing/DirectoryListTest.cs` —
   the test fixture.
 
-The public types are `DirectoryList`, `DirectoryListItem`,
-`DirectoryListItemFlags`, and `DirectoryListServerType`. The format-specific
-parser implementations are internal.
+The public types are `DirectoryList`, `DirectoryListOptions`,
+`DirectoryListItem`, `DirectoryListItemFlags`, and `DirectoryListServerType`.
+The format-specific parser implementations are internal.
 
 ## Build and test
 
